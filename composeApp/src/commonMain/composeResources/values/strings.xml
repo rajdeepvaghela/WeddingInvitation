@@ -1,0 +1,5 @@
+<resources>
+    <string name="open_github">Open github</string>
+    <string name="theme">Theme</string>
+    <string name="welcome_text">Welcome {name},\nto Rajdeep and Reema's Wedding</string>
+</resources>
