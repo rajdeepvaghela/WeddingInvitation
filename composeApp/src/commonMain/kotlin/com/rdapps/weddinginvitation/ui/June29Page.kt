@@ -7,7 +7,7 @@ import com.rdapps.weddinginvitation.util.VerticalSpacer
 @Composable
 fun June29Page() {
     Column {
-        EventItem("Mandavo", place = Place.AmarWadi, time = "9:00 AM")
+        EventItem("Mandvo", place = Place.AmarWadi, time = "9:00 AM")
 
         VerticalSpacer(40)
 
