@@ -4,7 +4,6 @@ import com.rdapps.weddinginvitation.App
 import com.rdapps.weddinginvitation.model.DeviceInfo
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
-import io.github.aakira.napier.log
 import kotlinx.browser.document
 import kotlinx.browser.window
 import org.jetbrains.skiko.wasm.onWasmReady

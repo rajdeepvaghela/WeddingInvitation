@@ -20,41 +20,28 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
-import com.rdapps.weddinginvitation.mapper.toClientInfo
-import com.rdapps.weddinginvitation.model.ClientInfo
 import com.rdapps.weddinginvitation.model.DeviceInfo
 import com.rdapps.weddinginvitation.model.HashData
-import com.rdapps.weddinginvitation.model.IpResponse
+import com.rdapps.weddinginvitation.model.Page
+import com.rdapps.weddinginvitation.model.SourcePlatform
 import com.rdapps.weddinginvitation.theme.AppTheme
 import com.rdapps.weddinginvitation.ui.*
-import com.rdapps.weddinginvitation.util.createHttpClient
-import com.rdapps.weddinginvitation.util.createJson
 import com.rdapps.weddinginvitation.util.sendEvent
-import com.russhwolf.settings.Settings
-import io.github.aakira.napier.log
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.serializer.KotlinXSerializer
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.util.*
+import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.stringResource
-import wedding_invitation.composeapp.generated.resources.*
-
-enum class Page {
-    Home,
-    June28,
-    June29,
-    June30,
-    July3
-}
+import wedding_invitation.composeapp.generated.resources.Res
+import wedding_invitation.composeapp.generated.resources.design
+import wedding_invitation.composeapp.generated.resources.red_bg_1
+import wedding_invitation.composeapp.generated.resources.red_bg_2
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun App(hash: String = "", deviceInfo: DeviceInfo = DeviceInfo()) = AppTheme {
+internal fun App(
+    hash: String = "",
+    deviceInfo: DeviceInfo = DeviceInfo(),
+    sourcePlatform: SourcePlatform = SourcePlatform.Web
+) = AppTheme {
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -62,7 +49,12 @@ internal fun App(hash: String = "", deviceInfo: DeviceInfo = DeviceInfo()) = App
             .systemBarsPadding()
     ) {
         Image(
-            painter = painterResource(Res.drawable.red_bg_2),
+            painter = painterResource(
+                when (sourcePlatform) {
+                    SourcePlatform.Android -> Res.drawable.red_bg_1
+                    SourcePlatform.Web -> Res.drawable.red_bg_2
+                }
+            ),
             contentDescription = "background",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -77,31 +69,31 @@ internal fun App(hash: String = "", deviceInfo: DeviceInfo = DeviceInfo()) = App
                 mutableStateOf(Page.Home)
             }
 
-            val json = remember {
-                createJson()
+            var supabase by remember {
+                mutableStateOf<SupabaseClient?>(null)
             }
 
-            val decodedHash = hash.removePrefix("#").decodeBase64String()
-            val decodedHashData = try {
-                json.decodeFromString(HashData.serializer(), decodedHash)
-            } catch (e: Exception) {
-                HashData()
-            }
-
-            val settings = remember {
-                Settings()
+            var userId by remember {
+                mutableStateOf<String?>(null)
             }
 
             var hashData by remember {
-                mutableStateOf(
-                    settings.getStringOrNull("config")?.let {
-                        if (it.isNotBlank())
-                            json.decodeFromString(HashData.serializer(), it)
-                        else
-                            decodedHashData
-                    } ?: decodedHashData
-                )
+                mutableStateOf(HashData())
             }
+
+            InitializeAndTrackData(
+                hash = hash,
+                deviceInfo = deviceInfo,
+                onSupabaseInitialized = {
+                    supabase = it
+                },
+                onUserIdFetch = {
+                    userId = it
+                },
+                onHashDataChange = {
+                    hashData = it
+                }
+            )
 
             Box(
                 modifier = Modifier
@@ -110,104 +102,6 @@ internal fun App(hash: String = "", deviceInfo: DeviceInfo = DeviceInfo()) = App
                     .windowInsetsPadding(WindowInsets.safeDrawing),
                 contentAlignment = Alignment.Center
             ) {
-                var userId by remember {
-                    mutableStateOf(settings.getString("id", ""))
-                }
-
-                val supabaseUrl = stringResource(Res.string.sb_url)
-                val supabaseKey = stringResource(Res.string.sb_key)
-
-                val supabase = remember(supabaseUrl, supabaseKey) {
-                    if (supabaseUrl.isNotBlank() && supabaseKey.isNotBlank()) {
-                        createSupabaseClient(
-                            supabaseUrl = supabaseUrl,
-                            supabaseKey = supabaseKey
-                        ) {
-                            defaultSerializer = KotlinXSerializer(json)
-
-                            install(Postgrest)
-                        }
-                    } else
-                        null
-                }
-
-                val client = remember {
-                    createHttpClient(json)
-                }
-
-                val ipInfoToken = stringResource(Res.string.ip_info_token)
-
-                LaunchedEffect(supabase) {
-                    supabase?.let { supabase ->
-                        if (!settings.hasKey("id")) {
-                            // fetch details and create user
-
-                            val ipResponse = try {
-                                client.get("https://ipinfo.io/?token=$ipInfoToken")
-                                    .body<IpResponse>()
-                            } catch (e: Exception) {
-                                log { "Exception: $e" }
-                                IpResponse()
-                            }
-
-                            val clientInfo = ipResponse.toClientInfo(
-                                name = decodedHashData.name,
-                                userAgent = deviceInfo.userAgent,
-                                vendor = deviceInfo.vendor,
-                                platform = deviceInfo.platform
-                            )
-
-                            val clientInfoResponse = supabase.from("users").insert(clientInfo) {
-                                select()
-                            }.decodeSingle<ClientInfo>()
-
-                            clientInfoResponse?.id?.let {
-                                settings.putString("id", it)
-                                userId = it
-                            }
-
-                            supabase.sendEvent("Visited", userId)
-
-                            val data = decodedHashData.copy(userId = userId)
-
-                            try {
-                                supabase.from("config").insert(data)
-                                settings.putString("config", json.encodeToString(HashData.serializer(), data))
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                log { "Exception: $e" }
-                            }
-
-                        } else {
-                            // return uuid of user
-                            userId = settings.getString("id", "")
-
-                            supabase.sendEvent("Visited", userId)
-                        }
-                    }
-                }
-
-                LaunchedEffect(userId, supabase) {
-                    supabase?.let { supabase ->
-                        if (userId.isNotBlank()) {
-                            try {
-                                val data = supabase.from("config").select {
-                                    filter {
-                                        eq("userId", userId)
-                                    }
-                                }.decodeSingle<HashData>()
-
-                                hashData = data
-
-                                settings.putString("config", json.encodeToString(HashData.serializer(), data))
-                            } catch (e: Exception) {
-                                log { "exception: $e" }
-                                e.printStackTrace()
-                            }
-                        }
-                    }
-                }
-
                 val density = LocalDensity.current
 
                 val size by derivedStateOf {
@@ -253,27 +147,27 @@ internal fun App(hash: String = "", deviceInfo: DeviceInfo = DeviceInfo()) = App
                         hashData = hashData,
                         onAddToCalendar = {
                             coroutineScope.launch {
-                                supabase?.sendEvent("Add to Calendar Clicked", userId)
+                                userId?.let { supabase?.sendEvent("Add to Calendar Clicked", it) }
                             }
                         },
                         onVenueClicked = {
                             coroutineScope.launch {
-                                supabase?.sendEvent("Venue Clicked", userId)
+                                userId?.let { supabase?.sendEvent("Venue Clicked", it) }
                             }
                         },
                         onStayClicked = {
                             coroutineScope.launch {
-                                supabase?.sendEvent("Stay Clicked", userId)
+                                userId?.let { supabase?.sendEvent("Stay Clicked", it) }
                             }
                         },
                         onCallClicked = {
                             coroutineScope.launch {
-                                supabase?.sendEvent("Call Clicked", userId)
+                                userId?.let { supabase?.sendEvent("Call Clicked", it) }
                             }
                         },
                         onDownloadKankotri = {
                             coroutineScope.launch {
-                                supabase?.sendEvent("Gujarati Kankotri Clicked", userId)
+                                userId?.let { supabase?.sendEvent("Gujarati Kankotri Clicked", it) }
                             }
                         }
                     )
