@@ -25,3 +25,7 @@ xcuserdata/
 Pods/
 *.jks
 *yarn.lock
+/composeApp/build/kotlinProjectStructureMetadata/
+/composeApp/build/kotlinToolingMetadata/
+/composeApp/build/kotlinTransformedMetadataLibraries/
+/composeApp/build/libs/

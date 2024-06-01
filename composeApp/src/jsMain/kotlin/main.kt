@@ -1,6 +1,11 @@
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.CanvasBasedWindow
 import com.rdapps.weddinginvitation.App
+import com.rdapps.weddinginvitation.model.DeviceInfo
+import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Napier
+import io.github.aakira.napier.log
+import kotlinx.browser.document
 import kotlinx.browser.window
 import org.jetbrains.skiko.wasm.onWasmReady
 
@@ -8,7 +13,19 @@ import org.jetbrains.skiko.wasm.onWasmReady
 fun main() {
     onWasmReady {
         CanvasBasedWindow("Wedding Invitation") {
-            App(window.location.hash)
+            Napier.base(DebugAntilog("Wedding Invitation"))
+
+            document.title = "કંકોત્રી - Wedding Invitation"
+
+            val deviceInfo = with(window.navigator) {
+                DeviceInfo(
+                    userAgent = userAgent,
+                    vendor = "$vendor $vendorSub",
+                    platform = platform
+                )
+            }
+
+            App(window.location.hash, deviceInfo)
         }
     }
 }

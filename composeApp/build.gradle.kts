@@ -54,6 +54,16 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
             implementation(libs.multiplatformSettings)
+
+            // supabase
+            implementation(project.dependencies.platform(libs.supabaseBom))
+            implementation(libs.supabase.postgrest.kt)
+
+            // logger
+            implementation(libs.napier)
+
+            // storage
+            implementation(libs.multiplatform.settings.no.arg)
         }
 
         commonTest.dependencies {
@@ -67,10 +77,12 @@ kotlin {
             implementation(compose.uiTooling)
             implementation(libs.androidx.activityCompose)
             implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.ktor.client.android)
         }
 
         jsMain.dependencies {
             implementation(compose.html.core)
+            implementation(libs.ktor.client.js)
         }
 
     }
@@ -94,25 +106,11 @@ android {
         manifest.srcFile("src/androidMain/AndroidManifest.xml")
         res.srcDirs("src/androidMain/res")
     }
-//    //https://developer.android.com/studio/test/gradle-managed-devices
-//    @Suppress("UnstableApiUsage")
-//    testOptions {
-//        managedDevices.devices {
-//            maybeCreate<ManagedVirtualDevice>("pixel5").apply {
-//                device = "Pixel 5"
-//                apiLevel = 34
-//                systemImageSource = "aosp"
-//            }
-//        }
-//    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.11"
     }
 }
