@@ -234,7 +234,7 @@ fun HomePage(
                     if (hashData.showContactNumber) {
                         Button(
                             onClick = {
-                                openUrl("tel:+919033159066")
+                                openUrl("tel:+919426785076")
                                 onCallClicked()
                             }
                         ) {
