@@ -7,9 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -46,7 +44,9 @@ class AppActivity : ComponentActivity() {
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize(),
+                        .fillMaxSize()
+                        .systemBarsPadding()
+                        .imePadding(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
@@ -72,17 +72,20 @@ class AppActivity : ComponentActivity() {
                             }
                         }
                     }
-                    Button(onClick = {
-                        currentPage = when (currentPage) {
-                            AppPage.Kankotri -> {
-                                AppPage.GenerateLink
-                            }
 
-                            AppPage.GenerateLink -> {
-                                AppPage.Kankotri
+                    Button(
+                        onClick = {
+                            currentPage = when (currentPage) {
+                                AppPage.Kankotri -> {
+                                    AppPage.GenerateLink
+                                }
+
+                                AppPage.GenerateLink -> {
+                                    AppPage.Kankotri
+                                }
                             }
                         }
-                    }) {
+                    ) {
                         Text(
                             text = when (currentPage) {
                                 AppPage.Kankotri -> "Generate Link"
