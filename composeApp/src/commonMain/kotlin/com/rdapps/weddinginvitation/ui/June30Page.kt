@@ -12,7 +12,7 @@ fun June30Page() {
 
         VerticalSpacer(40)
 
-        EventItem("Hast Medaap", place = Place.AmarWadi, time = "11:30 AM")
+        EventItem("Hast Melap", place = Place.AmarWadi, time = "11:30 AM")
 
         VerticalSpacer(40)
 
