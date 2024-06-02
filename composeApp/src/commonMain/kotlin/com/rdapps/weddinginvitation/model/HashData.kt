@@ -9,7 +9,8 @@ data class HashData(
     val showContactNumber: Boolean = false,
     val showReceptionDetails: Boolean = false,
     val showStayDetails: Boolean = false,
-    val from: From = From.Rajdeep
+    val from: From = From.Rajdeep,
+    val isDown: Boolean = false
 )
 
 enum class From {

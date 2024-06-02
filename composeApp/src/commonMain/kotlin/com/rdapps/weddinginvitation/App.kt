@@ -62,6 +62,18 @@ internal fun App(
             modifier = Modifier.fillMaxSize()
         )
 
+        var supabase by remember {
+            mutableStateOf<SupabaseClient?>(null)
+        }
+
+        var userId by remember {
+            mutableStateOf<String?>(null)
+        }
+
+        var hashData by remember {
+            mutableStateOf(HashData())
+        }
+
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -69,18 +81,6 @@ internal fun App(
 
             var selectedPage by remember {
                 mutableStateOf(Page.Home)
-            }
-
-            var supabase by remember {
-                mutableStateOf<SupabaseClient?>(null)
-            }
-
-            var userId by remember {
-                mutableStateOf<String?>(null)
-            }
-
-            var hashData by remember {
-                mutableStateOf(HashData())
             }
 
             InitializeAndTrackData(
@@ -244,6 +244,10 @@ internal fun App(
                     }
                 }
             }
+        }
+
+        if (hashData.isDown) {
+            BlockScreen()
         }
     }
 }
