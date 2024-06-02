@@ -26,6 +26,8 @@ import com.rdapps.weddinginvitation.model.Page
 import com.rdapps.weddinginvitation.model.SourcePlatform
 import com.rdapps.weddinginvitation.theme.AppTheme
 import com.rdapps.weddinginvitation.ui.*
+import com.rdapps.weddinginvitation.util.LocalSupabaseClient
+import com.rdapps.weddinginvitation.util.LocalUserId
 import com.rdapps.weddinginvitation.util.sendEvent
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.launch
@@ -142,51 +144,56 @@ internal fun App(
                         .offset(x = size / 2, y = size / 2)
                 )
 
-                AnimateIf(selectedPage == Page.Home) {
-                    HomePage(
-                        hashData = hashData,
-                        onAddToCalendar = {
-                            coroutineScope.launch {
-                                userId?.let { supabase?.sendEvent("Add to Calendar Clicked", it) }
+                CompositionLocalProvider(
+                    LocalSupabaseClient provides supabase,
+                    LocalUserId provides userId
+                ) {
+                    AnimateIf(selectedPage == Page.Home) {
+                        HomePage(
+                            hashData = hashData,
+                            onAddToCalendar = {
+                                coroutineScope.launch {
+                                    userId?.let { supabase?.sendEvent("Add to Calendar Clicked", it) }
+                                }
+                            },
+                            onVenueClicked = {
+                                coroutineScope.launch {
+                                    userId?.let { supabase?.sendEvent("Venue Clicked", it) }
+                                }
+                            },
+                            onStayClicked = {
+                                coroutineScope.launch {
+                                    userId?.let { supabase?.sendEvent("Stay Clicked", it) }
+                                }
+                            },
+                            onCallClicked = {
+                                coroutineScope.launch {
+                                    userId?.let { supabase?.sendEvent("Call Clicked", it) }
+                                }
+                            },
+                            onDownloadKankotri = {
+                                coroutineScope.launch {
+                                    userId?.let { supabase?.sendEvent("Gujarati Kankotri Clicked", it) }
+                                }
                             }
-                        },
-                        onVenueClicked = {
-                            coroutineScope.launch {
-                                userId?.let { supabase?.sendEvent("Venue Clicked", it) }
-                            }
-                        },
-                        onStayClicked = {
-                            coroutineScope.launch {
-                                userId?.let { supabase?.sendEvent("Stay Clicked", it) }
-                            }
-                        },
-                        onCallClicked = {
-                            coroutineScope.launch {
-                                userId?.let { supabase?.sendEvent("Call Clicked", it) }
-                            }
-                        },
-                        onDownloadKankotri = {
-                            coroutineScope.launch {
-                                userId?.let { supabase?.sendEvent("Gujarati Kankotri Clicked", it) }
-                            }
-                        }
-                    )
-                }
+                        )
+                    }
 
-                AnimateIf(selectedPage == Page.June28) {
-                    June28Page()
-                }
+                    AnimateIf(selectedPage == Page.June28) {
+                        June28Page()
+                    }
 
-                AnimateIf(selectedPage == Page.June29) {
-                    June29Page()
-                }
+                    AnimateIf(selectedPage == Page.June29) {
+                        June29Page()
+                    }
 
-                AnimateIf(selectedPage == Page.June30) {
-                    June30Page()
-                }
+                    AnimateIf(selectedPage == Page.June30) {
+                        June30Page()
+                    }
 
-                AnimateIf(selectedPage == Page.July3) {
-                    July3Page()
+                    AnimateIf(selectedPage == Page.July3) {
+                        July3Page()
+                    }
                 }
             }
 

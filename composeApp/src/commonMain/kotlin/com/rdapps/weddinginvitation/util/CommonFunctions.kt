@@ -1,8 +1,9 @@
 package com.rdapps.weddinginvitation.util
 
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
+import androidx.compose.runtime.compositionLocalOf
+import io.ktor.client.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 
@@ -19,3 +20,5 @@ fun createHttpClient(json: Json = Json) = HttpClient {
         json(json)
     }
 }
+
+val LocalUserId = compositionLocalOf<String?> { null }

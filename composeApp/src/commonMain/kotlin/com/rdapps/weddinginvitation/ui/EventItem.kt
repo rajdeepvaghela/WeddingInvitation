@@ -18,8 +18,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.rdapps.weddinginvitation.openUrl
-import com.rdapps.weddinginvitation.util.HorizontalSpacer
-import com.rdapps.weddinginvitation.util.VerticalSpacer
+import com.rdapps.weddinginvitation.util.*
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.vectorResource
 import wedding_invitation.composeapp.generated.resources.Res
@@ -74,12 +74,18 @@ enum class Place(val displayName: String, val location: String) {
 
 @Composable
 fun PlaceAndTime(place: Place, time: String) {
+    val coroutineScope = rememberCoroutineScope()
+    val supabase = LocalSupabaseClient.current
+    val userId = LocalUserId.current
     Column {
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
                 .clickable {
                     openUrl(place.location)
+                    coroutineScope.launch {
+                        userId?.let { supabase?.sendEvent("${place.displayName} Clicked", it) }
+                    }
                 },
             verticalAlignment = Alignment.CenterVertically
         ) {
