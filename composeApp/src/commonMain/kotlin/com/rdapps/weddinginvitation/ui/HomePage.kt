@@ -252,23 +252,48 @@ fun HomePage(
 
             VerticalSpacer(12)
 
-            Button(
-                onClick = {
-                    openUrl("../kankotri.pdf")
-                    onDownloadKankotri()
-                }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(
-                    vectorResource(Res.drawable.om_symbol),
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                HorizontalSpacer(10)
-                Text(
-                    text = "Gujarati Kankotri",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Button(
+                    onClick = {
+                        openUrl("../kankotri.pdf")
+                        onDownloadKankotri()
+                    }
+                ) {
+                    Icon(
+                        vectorResource(Res.drawable.om_symbol),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    HorizontalSpacer(10)
+                    Text(
+                        text = "Gujarati Kankotri",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+
+                if (hashData.showReceptionDetails) {
+                    Button(
+                        onClick = {
+                            openUrl("../reception-card.pdf")
+                            onDownloadKankotri()
+                        }
+                    ) {
+                        Icon(
+                            vectorResource(Res.drawable.party_horn),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        HorizontalSpacer(10)
+                        Text(
+                            text = "Reception Card",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
             }
+
         }
     }
 }
