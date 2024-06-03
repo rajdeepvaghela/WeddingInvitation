@@ -1,15 +1,15 @@
 package com.rdapps.weddinginvitation.mapper
 
-import com.rdapps.weddinginvitation.model.ClientInfo
+import com.rdapps.weddinginvitation.model.User
 import com.rdapps.weddinginvitation.model.IpResponse
 
-fun IpResponse.toClientInfo(
+fun IpResponse.toUser(
     id: String? = null,
     name: String,
     userAgent: String,
     vendor: String,
     platform: String
-) = ClientInfo(
+) = User(
     id = id,
     name = name,
     userAgent = userAgent,

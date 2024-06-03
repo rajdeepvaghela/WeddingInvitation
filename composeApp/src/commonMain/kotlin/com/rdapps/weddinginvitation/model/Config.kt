@@ -3,7 +3,7 @@ package com.rdapps.weddinginvitation.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class HashData(
+data class Config(
     val userId: String? = null,
     val name: String = "",
     val showContactNumber: Boolean = false,

@@ -1,11 +1,11 @@
 package com.rdapps.weddinginvitation.ui
 
 import androidx.compose.runtime.*
-import com.rdapps.weddinginvitation.mapper.toClientInfo
-import com.rdapps.weddinginvitation.model.ClientInfo
+import com.rdapps.weddinginvitation.mapper.toUser
+import com.rdapps.weddinginvitation.model.Config
 import com.rdapps.weddinginvitation.model.DeviceInfo
-import com.rdapps.weddinginvitation.model.HashData
 import com.rdapps.weddinginvitation.model.IpResponse
+import com.rdapps.weddinginvitation.model.User
 import com.rdapps.weddinginvitation.util.createHttpClient
 import com.rdapps.weddinginvitation.util.createJson
 import com.rdapps.weddinginvitation.util.sendEvent
@@ -30,46 +30,51 @@ fun InitializeAndTrackData(
     hash: String,
     deviceInfo: DeviceInfo,
     onSupabaseInitialized: (SupabaseClient) -> Unit,
-    onUserIdFetch: (String) -> Unit,
-    onHashDataChange: (HashData) -> Unit
+    onHashDataChange: (Config) -> Unit
 ) {
     val json = remember {
         createJson()
     }
 
     val decodedHash = hash.removePrefix("#").decodeBase64String()
-    val decodedHashData = try {
-        json.decodeFromString(HashData.serializer(), decodedHash)
+    val decodedConfig = try {
+        json.decodeFromString(Config.serializer(), decodedHash)
     } catch (e: Exception) {
-        HashData()
+        Config()
     }
 
     val settings = remember {
         Settings()
     }
 
-    var hashData by remember {
+    fun getConfigFromSettings(): Config? {
+        if (!settings.hasKey("config"))
+            return null
+
+        settings.getStringOrNull("config")?.let {
+            if (it.isNotBlank()) {
+                return json.decodeFromString(Config.serializer(), it)
+            } else {
+                return null
+            }
+        }
+
+        return null
+    }
+
+    var config by remember {
+        val storedConfig = getConfigFromSettings()
+
         mutableStateOf(
-            settings.getStringOrNull("config")?.let {
-                if (it.isNotBlank())
-                    json.decodeFromString(HashData.serializer(), it)
-                else
-                    decodedHashData
-            } ?: decodedHashData
+            if (storedConfig != null && (storedConfig.name == decodedConfig.name || decodedConfig.name.isBlank()))
+                storedConfig
+            else
+                decodedConfig
         )
     }
 
-    LaunchedEffect(hashData) {
-        onHashDataChange(hashData)
-    }
-
-    var userId by remember {
-        mutableStateOf(settings.getString("id", ""))
-    }
-
-    LaunchedEffect(userId) {
-        if (userId.isNotBlank())
-            onUserIdFetch(userId)
+    LaunchedEffect(config) {
+        onHashDataChange(config)
     }
 
     val supabaseUrl = stringResource(Res.string.sb_url)
@@ -102,7 +107,26 @@ fun InitializeAndTrackData(
 
     LaunchedEffect(supabase) {
         supabase?.let { supabase ->
-            if (!settings.hasKey("id")) {
+            var localConfig = getConfigFromSettings()
+
+            if (decodedConfig.name.isNotBlank() && localConfig?.name != decodedConfig.name) {
+                localConfig?.userId?.let { userId ->
+                    supabase.from("users").update(
+                        {
+                            set("isOverridden", true)
+                        }
+                    ) {
+                        filter {
+                            eq("id", userId)
+                        }
+                    }
+
+                    settings.remove("config")
+                    localConfig = null
+                }
+            }
+
+            if (localConfig == null) {
                 // fetch details and create user
 
                 val ipResponse = try {
@@ -113,29 +137,26 @@ fun InitializeAndTrackData(
                     IpResponse()
                 }
 
-                val clientInfo = ipResponse.toClientInfo(
-                    name = decodedHashData.name,
+                val user = ipResponse.toUser(
+                    name = decodedConfig.name,
                     userAgent = deviceInfo.userAgent,
                     vendor = deviceInfo.vendor,
                     platform = deviceInfo.platform
                 )
 
-                val clientInfoResponse = supabase.from("users").insert(clientInfo) {
+                val userResponse = supabase.from("users").insert(user) {
                     select()
-                }.decodeSingle<ClientInfo>()
+                }.decodeSingle<User>()
 
-                clientInfoResponse.id?.let {
-                    settings.putString("id", it)
-                    userId = it
-                }
+                userResponse.id ?: return@let
 
-                supabase.sendEvent("Visited", userId)
+                supabase.sendEvent("Visited", userResponse.id)
 
-                val data = decodedHashData.copy(userId = userId)
+                val newConfig = decodedConfig.copy(userId = userResponse.id)
 
                 try {
-                    supabase.from("config").insert(data)
-                    settings.putString("config", json.encodeToString(HashData.serializer(), data))
+                    supabase.from("config").insert(newConfig)
+                    settings.putString("config", json.encodeToString(Config.serializer(), newConfig))
                 } catch (e: Exception) {
                     e.printStackTrace()
                     log { "Exception: $e" }
@@ -143,32 +164,28 @@ fun InitializeAndTrackData(
 
             } else {
                 // return uuid of user
-                userId = settings.getString("id", "")
+                val userId = localConfig?.userId ?: return@let
 
                 supabase.sendEvent("Visited", userId)
-            }
-        }
-    }
 
-    LaunchedEffect(userId, supabase) {
-        supabase?.let { supabase ->
-            if (userId.isNotBlank()) {
+                // fetch new config data
                 try {
-                    val data = supabase.from("config").select {
+                    val newConfig = supabase.from("config").select {
                         filter {
                             eq("userId", userId)
                         }
-                    }.decodeSingleOrNull<HashData>()
+                    }.decodeSingleOrNull<Config>() ?: return@let
 
-                    data?.let {
-                        hashData = it
-                        settings.putString("config", json.encodeToString(HashData.serializer(), it))
-                    }
+                    config = newConfig
+                    settings.putString("config", json.encodeToString(Config.serializer(), newConfig))
                 } catch (e: Exception) {
                     log { "exception: $e" }
                     e.printStackTrace()
                 }
             }
+
+            if (settings.hasKey("id"))
+                settings.remove("id")
         }
     }
 }

@@ -3,7 +3,7 @@ package com.rdapps.weddinginvitation.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ClientInfo(
+data class User(
     val id: String?,
     val name: String,
     val userAgent: String,
@@ -17,5 +17,6 @@ data class ClientInfo(
     val lng: String = "",
     val org: String = "",
     val postal: String = "",
-    val timezone: String = ""
+    val timezone: String = "",
+    val isOverridden: Boolean = false
 )

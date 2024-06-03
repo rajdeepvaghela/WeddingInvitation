@@ -21,16 +21,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
 import com.rdapps.weddinginvitation.model.DeviceInfo
-import com.rdapps.weddinginvitation.model.HashData
+import com.rdapps.weddinginvitation.model.Config
 import com.rdapps.weddinginvitation.model.Page
 import com.rdapps.weddinginvitation.model.SourcePlatform
 import com.rdapps.weddinginvitation.theme.AppTheme
 import com.rdapps.weddinginvitation.ui.*
 import com.rdapps.weddinginvitation.util.LocalSupabaseClient
 import com.rdapps.weddinginvitation.util.LocalUserId
-import com.rdapps.weddinginvitation.util.sendEvent
 import io.github.jan.supabase.SupabaseClient
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import wedding_invitation.composeapp.generated.resources.Res
 import wedding_invitation.composeapp.generated.resources.design
@@ -66,19 +64,13 @@ internal fun App(
             mutableStateOf<SupabaseClient?>(null)
         }
 
-        var userId by remember {
-            mutableStateOf<String?>(null)
-        }
-
-        var hashData by remember {
-            mutableStateOf(HashData())
+        var config by remember {
+            mutableStateOf(Config())
         }
 
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            val coroutineScope = rememberCoroutineScope()
-
             var selectedPage by remember {
                 mutableStateOf(Page.Home)
             }
@@ -89,11 +81,8 @@ internal fun App(
                 onSupabaseInitialized = {
                     supabase = it
                 },
-                onUserIdFetch = {
-                    userId = it
-                },
                 onHashDataChange = {
-                    hashData = it
+                    config = it
                 }
             )
 
@@ -146,37 +135,10 @@ internal fun App(
 
                 CompositionLocalProvider(
                     LocalSupabaseClient provides supabase,
-                    LocalUserId provides userId
+                    LocalUserId provides config.userId
                 ) {
                     AnimateIf(selectedPage == Page.Home) {
-                        HomePage(
-                            hashData = hashData,
-                            onAddToCalendar = {
-                                coroutineScope.launch {
-                                    userId?.let { supabase?.sendEvent("Add to Calendar Clicked", it) }
-                                }
-                            },
-                            onVenueClicked = {
-                                coroutineScope.launch {
-                                    userId?.let { supabase?.sendEvent("Venue Clicked", it) }
-                                }
-                            },
-                            onStayClicked = {
-                                coroutineScope.launch {
-                                    userId?.let { supabase?.sendEvent("Stay Clicked", it) }
-                                }
-                            },
-                            onCallClicked = {
-                                coroutineScope.launch {
-                                    userId?.let { supabase?.sendEvent("Call Clicked", it) }
-                                }
-                            },
-                            onDownloadKankotri = {
-                                coroutineScope.launch {
-                                    userId?.let { supabase?.sendEvent("Gujarati Kankotri Clicked", it) }
-                                }
-                            }
-                        )
+                        HomePage(config = config)
                     }
 
                     AnimateIf(selectedPage == Page.June28) {
@@ -238,7 +200,7 @@ internal fun App(
                     selectedPage = Page.June30
                 }
 
-                if (hashData.showReceptionDetails) {
+                if (config.showReceptionDetails) {
                     MenuItem(isSelected = selectedPage == Page.July3, text = "3 July") {
                         selectedPage = Page.July3
                     }
@@ -246,7 +208,7 @@ internal fun App(
             }
         }
 
-        if (hashData.isDown) {
+        if (config.isDown) {
             BlockScreen()
         }
     }

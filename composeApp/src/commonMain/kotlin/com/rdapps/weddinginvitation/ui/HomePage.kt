@@ -15,12 +15,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
-import com.rdapps.weddinginvitation.model.HashData
+import com.rdapps.weddinginvitation.model.Config
 import com.rdapps.weddinginvitation.openUrl
-import com.rdapps.weddinginvitation.util.HorizontalSpacer
-import com.rdapps.weddinginvitation.util.VerticalSpacer
-import com.rdapps.weddinginvitation.util.now
-import com.rdapps.weddinginvitation.util.toMillis
+import com.rdapps.weddinginvitation.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
@@ -33,14 +30,7 @@ import org.jetbrains.compose.resources.vectorResource
 import wedding_invitation.composeapp.generated.resources.*
 
 @Composable
-fun HomePage(
-    hashData: HashData,
-    onAddToCalendar: () -> Unit,
-    onVenueClicked: () -> Unit,
-    onStayClicked: () -> Unit,
-    onCallClicked: () -> Unit,
-    onDownloadKankotri: () -> Unit
-) {
+fun HomePage(config: Config) {
     BoxWithConstraints {
         val totalWidth = maxWidth
 
@@ -64,15 +54,15 @@ fun HomePage(
 
             VerticalSpacer(20)
 
-            if (hashData.name.isNotBlank()) {
+            if (config.name.isNotBlank()) {
                 Text(
-                    text = hashData.name,
+                    text = config.name,
                     style = MaterialTheme.typography.displaySmall,
                     textAlign = TextAlign.Center
                 )
             }
 
-            val welcomeText = if (hashData.name.isBlank())
+            val welcomeText = if (config.name.isBlank())
                 stringResource(Res.string.welcome_text_without_name)
             else
                 stringResource(Res.string.welcome_text)
@@ -171,6 +161,9 @@ fun HomePage(
 
             VerticalSpacer(20)
 
+            val coroutineScope = rememberCoroutineScope()
+            val supabase = LocalSupabaseClient.current
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -178,7 +171,9 @@ fun HomePage(
                 Button(
                     onClick = {
                         openUrl(calendarEventUrl)
-                        onAddToCalendar()
+                        coroutineScope.launch {
+                            config.userId?.let { supabase?.sendEvent("Add to Calendar Clicked", it) }
+                        }
                     }
                 ) {
                     Icon(
@@ -194,7 +189,9 @@ fun HomePage(
                 Button(
                     onClick = {
                         openUrl(venueUrl)
-                        onVenueClicked()
+                        coroutineScope.launch {
+                            config.userId?.let { supabase?.sendEvent("Venue Clicked", it) }
+                        }
                     }
                 ) {
                     Icon(
@@ -207,18 +204,20 @@ fun HomePage(
                 }
             }
 
-            if (hashData.showStayDetails || hashData.showContactNumber) {
+            if (config.showStayDetails || config.showContactNumber) {
                 VerticalSpacer(12)
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    if (hashData.showStayDetails) {
+                    if (config.showStayDetails) {
                         val stayUrl = stringResource(Res.string.stay_url)
                         Button(
                             onClick = {
                                 openUrl(stayUrl)
-                                onStayClicked()
+                                coroutineScope.launch {
+                                    config.userId?.let { supabase?.sendEvent("Stay Clicked", it) }
+                                }
                             }
                         ) {
                             Icon(
@@ -231,11 +230,13 @@ fun HomePage(
                         }
                     }
 
-                    if (hashData.showContactNumber) {
+                    if (config.showContactNumber) {
                         Button(
                             onClick = {
                                 openUrl("tel:+919426785076")
-                                onCallClicked()
+                                coroutineScope.launch {
+                                    config.userId?.let { supabase?.sendEvent("Call Clicked", it) }
+                                }
                             }
                         ) {
                             Icon(
@@ -258,7 +259,9 @@ fun HomePage(
                 Button(
                     onClick = {
                         openUrl("../kankotri.pdf")
-                        onDownloadKankotri()
+                        coroutineScope.launch {
+                            config.userId?.let { supabase?.sendEvent("Gujarati Kankotri Clicked", it) }
+                        }
                     }
                 ) {
                     Icon(
@@ -273,11 +276,13 @@ fun HomePage(
                     )
                 }
 
-                if (hashData.showReceptionDetails) {
+                if (config.showReceptionDetails) {
                     Button(
                         onClick = {
                             openUrl("../reception-card.pdf")
-                            onDownloadKankotri()
+                            coroutineScope.launch {
+                                config.userId?.let { supabase?.sendEvent("Reception Card Clicked", it) }
+                            }
                         }
                     ) {
                         Icon(
