@@ -1,7 +1,11 @@
 package com.rdapps.weddinginvitation.ui
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.provider.ContactsContract.CommonDataKinds
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,10 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.rdapps.weddinginvitation.R
-import com.rdapps.weddinginvitation.model.HashData
+import com.rdapps.weddinginvitation.model.Config
 import com.rdapps.weddinginvitation.util.HorizontalSpacer
 import com.rdapps.weddinginvitation.util.VerticalSpacer
 import com.rdapps.weddinginvitation.util.createJson
@@ -32,6 +37,8 @@ fun GenerateLinkScreen() {
             .verticalScroll(rememberScrollState())
             .padding(20.dp)
     ) {
+        val context = LocalContext.current
+
         val json = remember {
             createJson()
         }
@@ -45,6 +52,10 @@ fun GenerateLinkScreen() {
         }
 
         var name by remember {
+            mutableStateOf("")
+        }
+
+        var number by remember {
             mutableStateOf("")
         }
 
@@ -63,8 +74,8 @@ fun GenerateLinkScreen() {
         fun generateHash() {
             val jsonString = if (name.isNotBlank())
                 json.encodeToString(
-                    HashData.serializer(),
-                    HashData(
+                    Config.serializer(),
+                    Config(
                         name = name,
                         showContactNumber = showContactInfo,
                         showReceptionDetails = showReceptionDetails,
@@ -79,6 +90,40 @@ fun GenerateLinkScreen() {
             } else {
                 url = "https://reedeepwedding.site"
             }
+        }
+
+        val request = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.data?.let { data ->
+
+                    val projection = arrayOf(CommonDataKinds.Phone.NUMBER, CommonDataKinds.Phone.DISPLAY_NAME)
+                    val cursor = context.contentResolver.query(data, projection, null, null, null)
+
+                    if (cursor != null && cursor.moveToFirst()) {
+                        val numberIndex = cursor.getColumnIndex(CommonDataKinds.Phone.NUMBER)
+                        val nameIndex = cursor.getColumnIndex(CommonDataKinds.Phone.DISPLAY_NAME)
+                        number = cursor.getString(numberIndex)
+                        name = cursor.getString(nameIndex)
+                        generateHash()
+                        cursor.close()
+                    }
+                }
+            }
+        }
+
+        Button(
+            onClick = {
+                request.launch(
+                    Intent(Intent.ACTION_PICK).apply {
+                        type = CommonDataKinds.Phone.CONTENT_TYPE
+                    }
+                )
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(text = "Pick Contact")
         }
 
         OutlinedTextField(
@@ -135,8 +180,6 @@ fun GenerateLinkScreen() {
 
         VerticalSpacer(heightInDp = 20)
 
-        val context = LocalContext.current
-
         Row(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
@@ -157,10 +200,10 @@ fun GenerateLinkScreen() {
 
             Button(
                 onClick = {
-                    val file = File(context.externalCacheDir!!.absolutePath, "kankotri.pdf")
+                    val file = File(context.externalCacheDir!!.absolutePath, "kankotri_wedding_invite.pdf")
 
                     if (!file.exists()) {
-                        context.resources.openRawResource(R.raw.kankotri).use { inputStream ->
+                        context.resources.openRawResource(R.raw.kankotri_new).use { inputStream ->
                             inputStream.copyTo(file.outputStream())
                         }
                     }
@@ -181,12 +224,7 @@ fun GenerateLinkScreen() {
             }
         }
 
-
         VerticalSpacer(heightInDp = 40)
-
-        var number by remember {
-            mutableStateOf("")
-        }
 
         OutlinedTextField(
             value = number,
@@ -313,4 +351,10 @@ fun CheckBoxText(text: String, isChecked: Boolean, onCheckedChange: (Boolean) ->
 
         Checkbox(checked = isChecked, onCheckedChange = onCheckedChange)
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GenerateLinkScreenPreview() {
+    GenerateLinkScreen()
 }

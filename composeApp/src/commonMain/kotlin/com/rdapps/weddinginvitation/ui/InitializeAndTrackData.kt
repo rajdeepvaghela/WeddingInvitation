@@ -2,10 +2,7 @@ package com.rdapps.weddinginvitation.ui
 
 import androidx.compose.runtime.*
 import com.rdapps.weddinginvitation.mapper.toUser
-import com.rdapps.weddinginvitation.model.Config
-import com.rdapps.weddinginvitation.model.DeviceInfo
-import com.rdapps.weddinginvitation.model.IpResponse
-import com.rdapps.weddinginvitation.model.User
+import com.rdapps.weddinginvitation.model.*
 import com.rdapps.weddinginvitation.util.createHttpClient
 import com.rdapps.weddinginvitation.util.createJson
 import com.rdapps.weddinginvitation.util.sendEvent
@@ -30,7 +27,8 @@ fun InitializeAndTrackData(
     hash: String,
     deviceInfo: DeviceInfo,
     onSupabaseInitialized: (SupabaseClient) -> Unit,
-    onHashDataChange: (Config) -> Unit
+    onHashDataChange: (Config) -> Unit,
+    sourcePlatform: SourcePlatform
 ) {
     val json = remember {
         createJson()
@@ -62,14 +60,19 @@ fun InitializeAndTrackData(
         return null
     }
 
-    var config by remember {
+    var config by remember(decodedConfig) {
         val storedConfig = getConfigFromSettings()
 
         mutableStateOf(
-            if (storedConfig != null && (storedConfig.name == decodedConfig.name || decodedConfig.name.isBlank()))
-                storedConfig
-            else
-                decodedConfig
+            when (sourcePlatform) {
+                SourcePlatform.Android -> decodedConfig
+                SourcePlatform.Web -> {
+                    if (storedConfig != null && (storedConfig.name == decodedConfig.name || decodedConfig.name.isBlank()))
+                        storedConfig
+                    else
+                        decodedConfig
+                }
+            }
         )
     }
 
@@ -107,85 +110,87 @@ fun InitializeAndTrackData(
 
     LaunchedEffect(supabase) {
         supabase?.let { supabase ->
-            var localConfig = getConfigFromSettings()
+            if (sourcePlatform == SourcePlatform.Web) {
+                var localConfig = getConfigFromSettings()
 
-            if (decodedConfig.name.isNotBlank() && localConfig?.name != decodedConfig.name) {
-                localConfig?.userId?.let { userId ->
-                    supabase.from("users").update(
-                        {
-                            set("isOverridden", true)
+                if (decodedConfig.name.isNotBlank() && localConfig?.name != decodedConfig.name) {
+                    localConfig?.userId?.let { userId ->
+                        supabase.from("users").update(
+                            {
+                                set("isOverridden", true)
+                            }
+                        ) {
+                            filter {
+                                eq("id", userId)
+                            }
                         }
-                    ) {
-                        filter {
-                            eq("id", userId)
-                        }
+
+                        settings.remove("config")
+                        localConfig = null
+                    }
+                }
+
+                if (localConfig == null) {
+                    // fetch details and create user
+
+                    val ipResponse = try {
+                        client.get("https://ipinfo.io/?token=$ipInfoToken")
+                            .body<IpResponse>()
+                    } catch (e: Exception) {
+                        log { "Exception: $e" }
+                        IpResponse()
                     }
 
-                    settings.remove("config")
-                    localConfig = null
+                    val user = ipResponse.toUser(
+                        name = decodedConfig.name,
+                        userAgent = deviceInfo.userAgent,
+                        vendor = deviceInfo.vendor,
+                        platform = deviceInfo.platform
+                    )
+
+                    val userResponse = supabase.from("users").insert(user) {
+                        select()
+                    }.decodeSingle<User>()
+
+                    userResponse.id ?: return@let
+
+                    supabase.sendEvent("Visited", userResponse.id)
+
+                    val newConfig = decodedConfig.copy(userId = userResponse.id)
+
+                    try {
+                        supabase.from("config").insert(newConfig)
+                        settings.putString("config", json.encodeToString(Config.serializer(), newConfig))
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        log { "Exception: $e" }
+                    }
+
+                } else {
+                    // return uuid of user
+                    val userId = localConfig?.userId ?: return@let
+
+                    supabase.sendEvent("Visited", userId)
+
+                    // fetch new config data
+                    try {
+                        val newConfig = supabase.from("config").select {
+                            filter {
+                                eq("userId", userId)
+                            }
+                        }.decodeSingleOrNull<Config>() ?: return@let
+
+                        config = newConfig
+                        settings.putString("config", json.encodeToString(Config.serializer(), newConfig))
+                    } catch (e: Exception) {
+                        log { "exception: $e" }
+                        e.printStackTrace()
+                    }
                 }
+
+                if (settings.hasKey("id"))
+                    settings.remove("id")
             }
-
-            if (localConfig == null) {
-                // fetch details and create user
-
-                val ipResponse = try {
-                    client.get("https://ipinfo.io/?token=$ipInfoToken")
-                        .body<IpResponse>()
-                } catch (e: Exception) {
-                    log { "Exception: $e" }
-                    IpResponse()
-                }
-
-                val user = ipResponse.toUser(
-                    name = decodedConfig.name,
-                    userAgent = deviceInfo.userAgent,
-                    vendor = deviceInfo.vendor,
-                    platform = deviceInfo.platform
-                )
-
-                val userResponse = supabase.from("users").insert(user) {
-                    select()
-                }.decodeSingle<User>()
-
-                userResponse.id ?: return@let
-
-                supabase.sendEvent("Visited", userResponse.id)
-
-                val newConfig = decodedConfig.copy(userId = userResponse.id)
-
-                try {
-                    supabase.from("config").insert(newConfig)
-                    settings.putString("config", json.encodeToString(Config.serializer(), newConfig))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    log { "Exception: $e" }
-                }
-
-            } else {
-                // return uuid of user
-                val userId = localConfig?.userId ?: return@let
-
-                supabase.sendEvent("Visited", userId)
-
-                // fetch new config data
-                try {
-                    val newConfig = supabase.from("config").select {
-                        filter {
-                            eq("userId", userId)
-                        }
-                    }.decodeSingleOrNull<Config>() ?: return@let
-
-                    config = newConfig
-                    settings.putString("config", json.encodeToString(Config.serializer(), newConfig))
-                } catch (e: Exception) {
-                    log { "exception: $e" }
-                    e.printStackTrace()
-                }
-            }
-
-            if (settings.hasKey("id"))
-                settings.remove("id")
         }
     }
 }

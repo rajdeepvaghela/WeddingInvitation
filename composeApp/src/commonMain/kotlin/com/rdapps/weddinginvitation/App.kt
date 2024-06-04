@@ -20,8 +20,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
-import com.rdapps.weddinginvitation.model.DeviceInfo
 import com.rdapps.weddinginvitation.model.Config
+import com.rdapps.weddinginvitation.model.DeviceInfo
 import com.rdapps.weddinginvitation.model.Page
 import com.rdapps.weddinginvitation.model.SourcePlatform
 import com.rdapps.weddinginvitation.theme.AppTheme
@@ -83,7 +83,8 @@ internal fun App(
                 },
                 onHashDataChange = {
                     config = it
-                }
+                },
+                sourcePlatform = sourcePlatform
             )
 
             Box(
