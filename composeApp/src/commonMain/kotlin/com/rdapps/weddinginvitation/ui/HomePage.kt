@@ -81,15 +81,6 @@ fun HomePage(config: Config) {
                 textAlign = TextAlign.Center
             )
 
-            VerticalSpacer(20)
-
-            Text(
-                text = "On 30th June 2024, which is from now",
-                style = MaterialTheme.typography.titleLarge
-            )
-
-            VerticalSpacer(10)
-
             val mrgDate = remember {
                 LocalDateTime(
                     LocalDate(2024, Month.JUNE, 30),
@@ -102,6 +93,15 @@ fun HomePage(config: Config) {
 
             val diff = mrgDate.toMillis() - currentTime.toMillis()
             if (diff > 0) {
+                VerticalSpacer(20)
+
+                Text(
+                    text = "On 30th June 2024, which is from now",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                VerticalSpacer(10)
+
                 LaunchedEffect(Unit) {
                     launch {
                         while (true) {
@@ -157,6 +157,13 @@ fun HomePage(config: Config) {
                     )
 
                 }
+            } else {
+                VerticalSpacer(20)
+
+                Text(
+                    text = "On 30th June 2024",
+                    style = MaterialTheme.typography.titleLarge
+                )
             }
 
             VerticalSpacer(20)
