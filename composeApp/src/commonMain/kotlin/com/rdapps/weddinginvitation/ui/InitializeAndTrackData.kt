@@ -159,8 +159,10 @@ fun InitializeAndTrackData(
                     val newConfig = decodedConfig.copy(userId = userResponse.id)
 
                     try {
-                        supabase.from("config").insert(newConfig)
-                        settings.putString("config", json.encodeToString(Config.serializer(), newConfig))
+                        config = supabase.from("config").insert(newConfig) {
+                            select()
+                        }.decodeSingle<Config>()
+                        settings.putString("config", json.encodeToString(Config.serializer(), config))
                     } catch (e: Exception) {
                         e.printStackTrace()
                         log { "Exception: $e" }
