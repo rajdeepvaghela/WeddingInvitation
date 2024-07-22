@@ -1,0 +1,5 @@
+<resources>
+    <string name="sb_url"><![CDATA[https://tedxhskflbyysugziyux.supabase.co]]></string>
+    <string name="sb_key"><![CDATA[eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlZHhoc2tmbGJ5eXN1Z3ppeXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTcwMDcxMjQsImV4cCI6MjAzMjU4MzEyNH0.a04RnR48LBzOBSn4BcZpFcmykzkPiBwC94lYMTSthdE]]></string>
+    <string name="ip_info_token">f638d572f2b361</string>
+</resources>

@@ -6,7 +6,4 @@
     <string name="calendar_event_url"><![CDATA[https://calendar.google.com/calendar/event?action=TEMPLATE&dates=20240630T090000Z%2F20240630T090000Z&text=Rajdeep+%26+Reema's+Wedding&details=Rajdeep+%26+Reema's+Wedding]]></string>
     <string name="venue_url"><![CDATA[https://www.google.com/maps/place/shree+vannza+ghnati+amarvadi/@20.7132359,70.9790717,19.21z/data=!4m17!1m10!3m9!1s0x3be31cdd79c175ab:0x87e61d2fef78c05b!2sHotel+Hemal+Garden!5m2!4m1!1i2!8m2!3d20.7137912!4d70.9789062!16s%2Fg%2F1th1sj06!3m5!1s0x3be31cdd7252d8db:0xe60df887c85e898b!8m2!3d20.7129968!4d70.979721!16s%2Fg%2F11fy1_ng18?entry=ttu]]></string>
     <string name="stay_url"><![CDATA[https://www.google.com/maps/place/Hotel+Hemal+Garden/@20.7137912,70.9763313,17z/data=!3m1!4b1!4m9!3m8!1s0x3be31cdd79c175ab:0x87e61d2fef78c05b!5m2!4m1!1i2!8m2!3d20.7137912!4d70.9789062!16s%2Fg%2F1th1sj06?entry=ttu]]></string>
-    <string name="sb_url"><![CDATA[https://tedxhskflbyysugziyux.supabase.co]]></string>
-    <string name="sb_key"><![CDATA[eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlZHhoc2tmbGJ5eXN1Z3ppeXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTcwMDcxMjQsImV4cCI6MjAzMjU4MzEyNH0.a04RnR48LBzOBSn4BcZpFcmykzkPiBwC94lYMTSthdE]]></string>
-    <string name="ip_info_token">f638d572f2b361</string>
 </resources>
