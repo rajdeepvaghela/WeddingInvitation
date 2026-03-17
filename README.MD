@@ -60,15 +60,6 @@
 
 ---
 
-## 🖥️ Screenshots
-
-<!-- Replace with actual screenshots -->
-| Web/Desktop          | Android App          |
-|----------------------|---------------------|
-| ![Web Screenshot](docs/web_screenshot.png) | ![Android Screenshot](docs/android_screenshot.png) |
-
----
-
 ## ⚡ Usage
 
 ### Web
