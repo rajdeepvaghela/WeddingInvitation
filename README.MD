@@ -3,17 +3,11 @@
 > Online wedding invitation website and Android app built using Compose Multiplatform (CMP), targeting both JS (web) and Android platforms.
 
 <p align="center">
-  <a href="https://github.com/rajdeepvaghela/WeddingInvitation/actions">
-    <img alt="Build Status" src="https://github.com/rajdeepvaghela/WeddingInvitation/actions/workflows/ci.yml/badge.svg?branch=main">
-  </a>
   <a href="https://kotlinlang.org/">
     <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.0.0-blue?logo=kotlin">
   </a>
   <a href="https://supabase.io/">
     <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Realtime%20DB-3ECF8E?logo=supabase">
-  </a>
-  <a href="https://github.com/rajdeepvaghela/WeddingInvitation">
-    <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajdeepvaghela/WeddingInvitation?style=social">
   </a>
   <a href="https://rajdeepvaghela.github.io/WeddingInvitation">
     <img alt="Live Demo" src="https://img.shields.io/badge/Live-Demo-brightgreen?logo=google-chrome">
