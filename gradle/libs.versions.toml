@@ -1,11 +1,12 @@
 [versions]
 
 ktorClientAndroid = "2.3.11"
+lifecycleViewmodelCompose = "2.8.0"
 supabase-bom = "2.4.2"
 kotlin = "2.0.0"
-compose = "1.6.10"
+compose = "1.7.0"
 agp = "8.2.2"
-androidx-activityCompose = "1.9.0"
+androidx-activityCompose = "1.9.3"
 androidx-uiTest = "1.6.7"
 composeImageLoader = "1.8.0"
 kotlinx-coroutines = "1.8.1"
@@ -21,6 +22,7 @@ androidx-testManifest = { module = "androidx.compose.ui:ui-test-manifest", versi
 androidx-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-uiTest" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktorClientAndroid" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktorClientAndroid" }
+lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 supabaseBom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabase-bom" }
 composeImageLoader = { module = "io.github.qdsfdhvh:image-loader", version.ref = "composeImageLoader" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }

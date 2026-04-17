@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -9,6 +11,7 @@ plugins {
     alias(libs.plugins.compose)
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlinx.serialization)
+    id("com.codingfeline.buildkonfig") version "0.15.1"
 }
 
 kotlin {
@@ -64,6 +67,9 @@ kotlin {
 
             // storage
             implementation(libs.multiplatform.settings.no.arg)
+
+            // viewmodel
+            implementation(libs.lifecycle.viewmodel.compose)
         }
 
         commonTest.dependencies {
@@ -112,5 +118,20 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+buildkonfig {
+    packageName = "com.rdapps.weddinginvitation"
+
+    defaultConfigs {
+        val sbUrl = gradleLocalProperties(rootDir)["sb_url"].toString()
+        buildConfigField(STRING, "sbUrl", sbUrl)
+
+        val sbKey = gradleLocalProperties(rootDir)["sb_key"].toString()
+        buildConfigField(STRING, "sbKey", sbKey)
+
+        val ipInfoToken = gradleLocalProperties(rootDir)["ip_info_token"].toString()
+        buildConfigField(STRING, "ipInfoToken", ipInfoToken)
     }
 }

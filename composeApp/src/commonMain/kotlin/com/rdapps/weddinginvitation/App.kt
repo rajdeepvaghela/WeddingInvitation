@@ -6,13 +6,35 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -20,12 +42,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
-import com.rdapps.weddinginvitation.model.Config
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rdapps.weddinginvitation.model.DeviceInfo
 import com.rdapps.weddinginvitation.model.Page
 import com.rdapps.weddinginvitation.model.SourcePlatform
 import com.rdapps.weddinginvitation.theme.AppTheme
-import com.rdapps.weddinginvitation.ui.*
+import com.rdapps.weddinginvitation.ui.BlockScreen
+import com.rdapps.weddinginvitation.ui.HomePage
+import com.rdapps.weddinginvitation.ui.HomeViewModel
+import com.rdapps.weddinginvitation.ui.InitializeAndTrackData
+import com.rdapps.weddinginvitation.ui.July3Page
+import com.rdapps.weddinginvitation.ui.June28Page
+import com.rdapps.weddinginvitation.ui.June29Page
+import com.rdapps.weddinginvitation.ui.June30Page
 import com.rdapps.weddinginvitation.util.LocalSupabaseClient
 import com.rdapps.weddinginvitation.util.LocalUserId
 import io.github.jan.supabase.SupabaseClient
@@ -42,6 +71,9 @@ internal fun App(
     deviceInfo: DeviceInfo = DeviceInfo(),
     sourcePlatform: SourcePlatform = SourcePlatform.Web
 ) = AppTheme {
+
+    val viewModel = viewModel<HomeViewModel>()
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -64,9 +96,7 @@ internal fun App(
             mutableStateOf<SupabaseClient?>(null)
         }
 
-        var config by remember {
-            mutableStateOf(Config())
-        }
+        val config by viewModel.configFlow.collectAsState()
 
         Column(
             modifier = Modifier.fillMaxSize()
@@ -75,17 +105,24 @@ internal fun App(
                 mutableStateOf(Page.Home)
             }
 
-            InitializeAndTrackData(
-                hash = hash,
-                deviceInfo = deviceInfo,
-                onSupabaseInitialized = {
-                    supabase = it
-                },
-                onHashDataChange = {
-                    config = it
-                },
-                sourcePlatform = sourcePlatform
-            )
+            if (sourcePlatform == SourcePlatform.Web) {
+                viewModel.init(
+                    hash = hash,
+                    deviceInfo = deviceInfo
+                )
+            }
+
+//            InitializeAndTrackData(
+//                hash = hash,
+//                deviceInfo = deviceInfo,
+//                onSupabaseInitialized = {
+//                    supabase = it
+//                },
+//                onHashDataChange = {
+//                    config = it
+//                },
+//                sourcePlatform = sourcePlatform
+//            )
 
             Box(
                 modifier = Modifier
@@ -230,7 +267,12 @@ fun BoxScope.AnimateIf(condition: Boolean, content: @Composable BoxScope.() -> U
 }
 
 @Composable
-fun MenuItem(isSelected: Boolean, text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun MenuItem(
+    isSelected: Boolean,
+    text: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     FilterChip(
         selected = isSelected,
         onClick = onClick,

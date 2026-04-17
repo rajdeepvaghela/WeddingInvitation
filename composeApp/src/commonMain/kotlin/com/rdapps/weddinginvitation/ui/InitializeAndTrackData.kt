@@ -1,6 +1,7 @@
 package com.rdapps.weddinginvitation.ui
 
 import androidx.compose.runtime.*
+import com.rdapps.weddinginvitation.BuildKonfig
 import com.rdapps.weddinginvitation.mapper.toUser
 import com.rdapps.weddinginvitation.model.*
 import com.rdapps.weddinginvitation.util.createHttpClient
@@ -18,9 +19,6 @@ import io.ktor.client.request.*
 import io.ktor.util.*
 import org.jetbrains.compose.resources.stringResource
 import wedding_invitation.composeapp.generated.resources.Res
-import wedding_invitation.composeapp.generated.resources.ip_info_token
-import wedding_invitation.composeapp.generated.resources.sb_key
-import wedding_invitation.composeapp.generated.resources.sb_url
 
 @Composable
 fun InitializeAndTrackData(
@@ -80,8 +78,8 @@ fun InitializeAndTrackData(
         onHashDataChange(config)
     }
 
-    val supabaseUrl = stringResource(Res.string.sb_url)
-    val supabaseKey = stringResource(Res.string.sb_key)
+    val supabaseUrl = BuildKonfig.sbUrl
+    val supabaseKey = BuildKonfig.sbUrl
 
     val supabase = remember(supabaseUrl, supabaseKey) {
         if (supabaseUrl.isNotBlank() && supabaseKey.isNotBlank()) {
@@ -106,7 +104,7 @@ fun InitializeAndTrackData(
         createHttpClient(json)
     }
 
-    val ipInfoToken = stringResource(Res.string.ip_info_token)
+    val ipInfoToken = BuildKonfig.ipInfoToken
 
     LaunchedEffect(supabase) {
         supabase?.let { supabase ->
